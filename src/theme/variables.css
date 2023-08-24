@@ -1,0 +1,16 @@
+:root {
+  --ion-color-primary: #000000;
+  --ion-color-primary-contrast: #ffffff;
+}
+/* In your component's CSS file or a global stylesheet */
+.custom-icon {
+  color: var(--ion-color-primary);
+}
+.custom-avatar {
+  margin-right: 15px; /* Adjust the margin as needed */
+}
+
+ion-button {
+  text-transform: none;
+ }
+ 
