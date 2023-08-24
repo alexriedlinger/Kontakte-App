@@ -94,6 +94,7 @@ export default {
     IonItem,
     IonAvatar,
     IonText,
+    IonItemSliding,
     IonButton,
     IonIcon,
   },
