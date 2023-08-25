@@ -14,7 +14,7 @@
     <ion-content>
       <ion-grid>
         <ion-row class="m-0" style="display: flex; align-items: center;">
-          <ion-icon class="custom-icon m-auto" :icon="personOutline" aria-hidden="true"></ion-icon>
+          <ion-icon class="custom-icon m-auto" :icon="personOutline" aria-hidden="true" ></ion-icon>
           <ion-col>
             <ion-item>
               <ion-input v-model="firstName" type="text" label="Vorname" label-placement="floating" placeholder=""></ion-input>
@@ -216,8 +216,9 @@ const openBirthdayPicker = async () => {
 
 <style scoped>
 .custom-icon {
-  margin-left: 5vw;
-  margin-right: 5vw;
+  margin-left: 3vw;
+  margin-right: 0vw;
+  font-size: 24px;
 }
 .invisible-icon {
   color: rgba(0, 0, 0, 0);
