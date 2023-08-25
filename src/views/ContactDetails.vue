@@ -20,12 +20,12 @@
           <img alt="Avatar" :src="defaultAvatarUrl" />
         </ion-avatar>
       </ion-item>
-      <div class="ion-text-center" style="margin-bottom: 8vh;">
-        <ion-text style="font-size: 7vw">{{ fullName }}</ion-text>
+      <div class="ion-text-center" style="margin-bottom: 6vh;">
+        <ion-text style="font-size: 6vw">{{ fullName }}</ion-text>
       </div>
         <ion-item-sliding>
           <ion-item lines="none" :detail="false">
-            <ion-icon class="custom-icon" :icon="callOutline" ></ion-icon>
+            <ion-icon class="custom-icon" :icon="callOutline" size="large"></ion-icon>
             <ion-text>{{ phoneNumber }}</ion-text>
           </ion-item>
           <ion-item-options>
@@ -37,9 +37,9 @@
             </ion-item-option>
           </ion-item-options>
         </ion-item-sliding>
-        <ion-item-sliding>
+        <ion-item-sliding style="margin-top: 2%;">
           <ion-item lines="none" :detail="false">
-            <ion-icon class="custom-icon" :icon="mailOutline"></ion-icon>
+            <ion-icon class="custom-icon" :icon="mailOutline" size="large"></ion-icon>
             <ion-text>{{ email }}</ion-text>
           </ion-item>
           <ion-item-options>
@@ -52,8 +52,8 @@
           </ion-item-options>
         </ion-item-sliding>
         <!-- Birthday -->
-        <ion-item lines="none">
-          <ion-icon class="custom-icon" :icon="calendarOutline" color="black"></ion-icon>
+        <ion-item lines="none" style="margin-top: 2%;">
+          <ion-icon class="custom-icon" :icon="calendarOutline" size="large"></ion-icon>
           <ion-text>{{ birthday }}</ion-text>
         </ion-item>
     </ion-content>
@@ -113,7 +113,7 @@ const contactId = ref('');
 const phoneNumber = ref('');
 const email = ref('');
 const birthday = ref('');
-const fullName = ref('');
+const fullName = ref('Alexander Riedlinger');
 const defaultAvatarUrl = 'resources/avatar.svg';
 
 // Function to format birthday information
@@ -251,7 +251,7 @@ onMounted(async () => {
 
 <style>
 .avatar-item {
-  margin-top: 10vw; 
+  margin-top: 20vw; 
   margin-bottom: 10vw;
 }
 
