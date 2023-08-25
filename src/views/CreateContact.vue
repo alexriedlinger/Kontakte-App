@@ -49,7 +49,7 @@
           <ion-icon class="custom-icon m-auto" :icon="calendarOutline" aria-hidden="true"></ion-icon>
           <ion-col>
             <ion-item button @click="openBirthdayPicker" :detail=false>
-              <ion-input v-model="birthday" inputmode="none" :readonly="true" label="Geburtstag" label-placement="floating"></ion-input>
+              <ion-input v-model="displayedBirthday" inputmode="none" :readonly="true" label="Geburtstag" label-placement="floating"></ion-input>
             </ion-item>
           </ion-col>
         </ion-row>
@@ -58,172 +58,168 @@
   </ion-page>
 </template>
 
-
-<script lang="ts">
+<script setup lang="ts">
 import {
-  IonContent,
-  IonHeader,
-  IonTitle,
-  IonPage,
-  IonToolbar,
   IonBackButton,
   IonButton,
   IonButtons,
-  IonList,
-  IonItem,
-  IonInput,
+  IonCol,
+  IonContent,
+  IonGrid,
+  IonHeader,
   IonIcon,
-  alertController
+  IonInput,
+  IonItem,
+  IonPage,
+  IonRow,
+  IonTitle,
+  IonToolbar,
+  alertController,
 } from '@ionic/vue';
-import { closeOutline, personOutline, callOutline, calendarOutline, mailOutline } from 'ionicons/icons';
+
+import { 
+  callOutline,
+  calendarOutline,
+  closeOutline,
+  mailOutline,
+  personOutline, 
+} from 'ionicons/icons';
+
 import {
+  BirthdayInput,
+  ContactInput,
   Contacts,
   CreateContactOptions,
-  ContactInput,
   CreateContactResult,
-  PhoneType,
   EmailType,
+  PhoneType,
 } from '@capacitor-community/contacts';
+
 import { DatetimePicker } from '@capawesome-team/capacitor-datetime-picker';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import EventBus from '@/router/EventBus';
 
-export default {
-  components: {
-    IonContent,
-    IonHeader,
-    IonTitle,
-    IonPage,
-    IonToolbar,
-    IonBackButton,
-    IonButton,
-    IonButtons,
-    IonList,
-    IonItem,
-    IonInput,
-    IonIcon,
-    alertController,
-    Contacts
-  },
-  data() {
-    return {
-      closeOutline,
-      personOutline,
-      callOutline,
-      calendarOutline,
-      mailOutline,
-      firstName: '',
-      lastName: '',
-      phoneNumber: '',
-      email: '',
-      birthday: '',
-      selectedDate: '',
+const router = useRouter();
+
+const firstName = ref('');
+const lastName = ref('');
+const phoneNumber = ref('');
+const email = ref('');
+const displayedBirthday = ref('');
+const birthdayInput = ref<BirthdayInput | null>(null);
+
+// Function to create a new contact
+const createContact = async () => {
+  // Check for missing information
+  if (!firstName.value.trim() && !lastName.value.trim() && !phoneNumber.value.trim() && !email.value.trim() && !displayedBirthday.value.trim()) {
+    // Show an alert for missing information
+    const alert = await alertController.create({
+      header: 'Fehlende Informationen',
+      message: 'Bitte füllen Sie mindestens ein Feld aus, um den Kontakt zu erstellen.',
+      buttons: ['OK'],
+    });
+
+    await alert.present();
+    return;
+  }
+
+  // Prepare the contact input
+  const newContact: ContactInput = {
+    name: {
+      given: firstName.value.trim() !== '' ? firstName.value.trim() : undefined,
+      family: lastName.value.trim() !== '' ? lastName.value.trim() : undefined,
+    },
+    phones: phoneNumber.value.trim() !== '' ? [{
+      type: PhoneType.Home,
+      number: phoneNumber.value.trim(),
+    }] : [],
+    emails: email.value.trim() !== '' ? [{
+      type: EmailType.Work,
+      address: email.value.trim(),
+    }] : [],
+    birthday: birthdayInput.value || null
     };
-  },
-  methods: {
-    /**
-     * Creates a new contact using the provided input fields.
-     */
-    async createContact() {
-      // Check for missing data
-      if (!this.firstName.trim() && !this.lastName.trim() && !this.phoneNumber.trim() && !this.email.trim() && !this.birthday.trim()) {
-        // Display an alert if there's missing data
-        const alert = await alertController.create({
-          header: 'Missing Information',
-          message: 'Please fill in at least one field to create the contact.',
-          buttons: ['OK'],
-        });
 
-        await alert.present();
-        return; // Exit the function if there's missing data
-      }
+  const createContactOptions: CreateContactOptions = {
+    contact: newContact,
+  };
 
-      // Construct the newContact object
-      const newContact: ContactInput = {
-        name: {
-          given: this.firstName.trim() !== '' ? this.firstName.trim() : undefined,
-          family: this.lastName.trim() !== '' ? this.lastName.trim() : undefined,
-        },
-        phones: this.phoneNumber.trim() !== '' ? [{
-          type: PhoneType.Home,
-          number: this.phoneNumber.trim(),
-        }] : [],
-        emails: this.email.trim() !== '' ? [{
-          type: EmailType.Work,
-          address: this.email.trim(),
-        }] : [],
-        birthday: this.birthday.trim() !== '' ? {
-          day: new Date(this.birthday).getDate(),
-          month: new Date(this.birthday).getMonth() + 1,
-          year: new Date(this.birthday).getFullYear(),
-        } : undefined,
+  try {
+    // Create the contact
+    const result: CreateContactResult = await Contacts.createContact(createContactOptions);
+    const createdContactId = result.contactId;
+
+    // Emit an event for contact creation and redirect to contact detail page
+    EventBus.emit('createdContact');
+
+    // Clear form values
+    firstName.value = '';
+    lastName.value = '';
+    phoneNumber.value = '';
+    email.value = '';
+    displayedBirthday.value = '';
+    birthdayInput.value = null;
+    
+    try {
+      // Redirect to the newly created contact's detail page
+      router.push({ path: `/contacts/${createdContactId}` });
+    } catch (error) {
+      console.error("Routing Error", error);
+    }
+  } catch (error) {
+    // Handle contact creation error
+    console.error('Error creating contact:', error);
+    const alert = await alertController.create({
+      header: 'Fehler',
+      message: 'Beim Erstellen des Kontakts ist ein Fehler aufgetreten.',
+      buttons: ['Erneut versuchen'],
+    });
+
+    await alert.present();
+  }
+};
+
+// Function to open the birthday picker
+const openBirthdayPicker = async () => {
+  try {
+    const currentDate = new Date();
+
+    const { value } = await DatetimePicker.present({
+      mode: 'date',
+      theme: 'auto',
+      value: currentDate.toISOString(),
+      locale: 'default',
+    });
+
+    if (value) {
+      const selectedDate = new Date(value);
+
+      birthdayInput.value = {
+        day: selectedDate.getDate(),
+        month: selectedDate.getMonth() + 1,
+        year: selectedDate.getFullYear(),
       };
 
-      // Use the createContact API function to create the contact
-      const createContactOptions: CreateContactOptions = {
-        contact: newContact,
-      };
-
-      try {
-        const result: CreateContactResult = await Contacts.createContact(createContactOptions);
-        const createdContactId = result.contactId;
-
-        // Redirect to the contacts page after successful creation
-        try {
-          this.$router.push({ name: 'contacts', query: { reloadView: 'true' } });
-        } catch (error) {
-          console.error("Routing Error", error);
-        }
-      } catch (error) {
-        console.error('Error creating contact:', error);
-        const alert = await alertController.create({
-          header: 'Error',
-          message: 'An error occurred while creating the contact.',
-          buttons: ['OK'],
-        });
-
-        await alert.present();
-      }
-    },
-
-    /**
-     * Opens the date picker for selecting the contact's birthday.
-     */
-    async openBirthdayPicker() {
-      try {
-        const currentDate = new Date();
-
-        const { value } = await DatetimePicker.present({
-          mode: 'date',
-          theme: 'auto',
-          value: currentDate.toISOString(),
-          locale: 'default', // Use 'default' to get the user's preferred locale
-        });
-
-        if (value) {
-          // Parse the selected date to a localized string using the user's locale
-          const selectedDate = new Date(value);
-          const localizedDateString = selectedDate.toLocaleDateString(undefined, {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-          });
-          this.birthday = localizedDateString;
-        }
-      } catch (error) {
-        console.error('Datetime picker error:', error);
-      }
-    },
-  },
+      const localizedDateString = selectedDate.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+      displayedBirthday.value = localizedDateString;
+    }
+  } catch (error) {
+    console.error('Datetime picker error:', error);
+  }
 };
 </script>
 
-
-
-<style>
+<style scoped>
 .custom-icon {
   margin-left: 5vw;
   margin-right: 5vw;
 }
 .invisible-icon {
-  color: rgba(0, 0, 0, 0); /* Make the icon fully transparent */
+  color: rgba(0, 0, 0, 0);
 }
 </style>

@@ -2,7 +2,7 @@
   <ion-page>
     <ion-header>
       <ion-toolbar>
-        <ion-button router-link="contacts/create" fill="clear" expand="full" class="text-icon-button" color="black">
+        <ion-button router-link="/contacts/create" fill="clear" expand="full" class="text-icon-button" color="black">
           <ion-icon slot="start" :icon="personAddOutline"></ion-icon>
           Neuen Kontakt erstellen
         </ion-button>
@@ -21,148 +21,139 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import {
+  IonAvatar,
+  IonButton,
   IonContent,
   IonHeader,
-  IonTitle,
+  IonIcon,
+  IonItem,
+  IonList,
   IonPage,
   IonToolbar,
-  IonBackButton,
-  IonButton,
-  IonButtons,
-  IonAvatar,
-  IonList,
-  IonItem,
-  IonInput,
-  IonIcon,
   alertController,
 } from '@ionic/vue';
-import { Contacts, ContactPayload } from '@capacitor-community/contacts';
-import { personAddOutline } from "ionicons/icons";
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { BirthdayPayload, ContactPayload, Contacts } from '@capacitor-community/contacts';
+import { personAddOutline } from 'ionicons/icons';
 import { App } from '@capacitor/app';
 
-export default {
-  components: {
-    IonContent,
-    IonHeader,
-    IonTitle,
-    IonAvatar,
-    IonPage,
-    IonToolbar,
-    IonBackButton,
-    IonButton,
-    IonButtons,
-    IonList,
-    IonItem,
-    IonInput,
-    IonIcon,
-    alertController,
-  },
-  data() {
-    return {
-      personAddOutline: personAddOutline,
-      defaultAvatarUrl: 'resources/avatar.svg',
-      contacts: [] as ContactPayload[],
-      componentKey: 0,
-    };
-  },
-  computed: {
-    sortedContacts() {
-      return this.contacts.slice().sort((a, b) => {
-        const firstNameA = (a.name && a.name.given) || '';
-        const firstNameB = (b.name && b.name.given) || ''; 
-        return firstNameA.localeCompare(firstNameB);
+// Import custom event bus for communication between components
+import EventBus from '@/router/EventBus';
+
+const defaultAvatarUrl = 'resources/avatar.svg';
+const contacts = ref<ContactPayload[]>([]);
+
+// Compute a sorted list of contacts by first name
+const sortedContacts = computed(() => {
+  return contacts.value.slice().sort((a, b) => {
+    const firstNameA = (a.name && a.name.given) || '';
+    const firstNameB = (b.name && b.name.given) || '';
+    return firstNameA.localeCompare(firstNameB);
+  });
+});
+
+// Function to retrieve contacts and handle permissions
+const retrieveContacts = async () => {
+  try {
+    // Request contacts permission from the user
+    const response = await Contacts.requestPermissions();
+    if (response.contacts === 'granted') {
+      // Define the projection to retrieve specific contact data
+      const projection = {
+        name: true,
+        phones: true,
+      };
+
+      // Retrieve contacts using the specified projection
+      const result = await Contacts.getContacts({ projection });
+      contacts.value = result.contacts;
+    } else {
+      // Show an alert if contacts permission is not granted
+      const alert = await alertController.create({
+        header: 'Berechtigung erforderlich',
+        message: 'Diese App benötigt Zugriff auf Ihre Kontakte. Gewähren Sie die Berechtigung, um fortzufahren.',
+        buttons: [
+          {
+            text: 'Beenden',
+            handler: () => {
+              App.exitApp();
+            },
+          },
+          {
+            text: 'Erneut versuchen',
+            handler: () => {
+              retrieveContacts(); // Retry retrieving contacts
+            },
+          },
+        ],
       });
-    },
-  },
-  watch: {
-    '$route.query.reloadView': {
-      immediate: true,
-      handler(reloadViewParam) {
-        if (reloadViewParam === 'true') {
-          // New contact has been added, fetch contacts again
-          this.$forceUpdate();
-        }
-      },
-    },
-  },
-  methods: {
-    /**
-     * Retrieves contacts from the device's contacts and updates the component's contacts list.
-     */
-    async retrieveContacts() {
-      try {
-        const response = await Contacts.requestPermissions();
-        console.log('Contacts permission response: ', response);
 
-        if (response.contacts === 'granted') {
-          console.log('Granted permissions for contacts');
-          const projection = {
-            name: true,
-            phones: true,
-          };
-
-          const result = await Contacts.getContacts({ projection });
-          console.log('Got contacts result: ', result);
-
-          // Handle the retrieved contacts, e.g., assign them to a variable
-          this.contacts = result.contacts;
-          // Further processing with the contacts data
-        } else {
-          console.log('Contacts permission not granted yet');
-
-          const alert = await alertController.create({
-            header: 'Permission Required',
-            message: 'This app requires access to your contacts. Grant permission to proceed.',
-            buttons: [
-              {
-                text: 'Exit',
-                handler: () => {
-                  App.exitApp();
-                },
-              },
-              {
-                text: 'Try again',
-                handler: () => {
-                  this.retrieveContacts(); // Retry retrieval
-                },
-              },
-            ],
-          });
-
-          await alert.present();
-        }
-      } catch (error) {
-        console.error('Error requesting or getting contacts permission: ', error);
-      }
-    },
-
-    /**
-     * Generates a display name for the given contact.
-     * @param contact - The contact for which to generate the display name.
-     * @returns The generated display name.
-     */
-    getDisplayName(contact: ContactPayload) {
-      const { name, phones } = contact;
-
-      if (name && (name.given || name.family)) {
-        const firstName = name.given || '';
-        const lastName = name.family || '';
-        return `${firstName} ${lastName}`;
-      } else if (phones && phones.length > 0) {
-        return phones[0].number; // Display the first phone number if no name is available
-      } else {
-        return 'Unknown';
-      }
-    },
-  },
-  mounted() {
-    this.retrieveContacts();
-  },
+      await alert.present();
+    }
+  } catch (error) {
+    console.error('Error requesting or getting contacts permission: ', error);
+  }
 };
+
+// Function to get a display name for a contact
+const getDisplayName = (contact: ContactPayload): string => {
+  const { name, phones, emails, birthday } = contact;
+
+  if (name && (name.given || name.family)) {
+    const firstName = name.given || '';
+    const lastName = name.family || '';
+    return `${firstName} ${lastName}`;
+  } else if (phones && phones.length > 0) {
+    return phones[0].number!;
+  } else if (emails && emails.length > 0) {
+    return emails[0].address!;
+  } else if (birthday) {
+    return formatBirthday(birthday);
+  } else {
+    return '';
+  }
+};
+
+// Function to format birthday information
+const formatBirthday = (birthday: BirthdayPayload): string => {
+  // Format the birthday using toLocaleDateString
+  if (birthday && birthday.year && birthday.month && birthday.day) {
+    const formattedDate = new Date(birthday.year, birthday.month - 1, birthday.day).toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+
+    return formattedDate;
+  } else {
+    return '';
+  }
+};
+
+// Event handler for contact-related events
+const handleContactEvent = () => {
+  retrieveContacts(); // Update contacts when a new contact is created or deleted
+};
+
+// Mounting logic
+onMounted(() => {
+  retrieveContacts(); // Retrieve contacts on page load
+  // Attach event listeners for contact events
+  EventBus.on('createdContact', handleContactEvent);
+  EventBus.on('deletedContact', handleContactEvent);
+});
+
+// Unmounting logic
+onUnmounted(() => {
+  // Detach event listeners when the component is unmounted
+  EventBus.off('createdContact', handleContactEvent);
+  EventBus.off('deletedContact', handleContactEvent);
+});
 </script>
 
+
 <style>
-/* Add your custom styles here */
+/* Your styles here */
 </style>
