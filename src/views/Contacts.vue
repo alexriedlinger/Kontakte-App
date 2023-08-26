@@ -70,39 +70,31 @@ const retrieveContacts = async () => {
       const result = await Contacts.getContacts({ projection });
       contacts.value = result.contacts;
     } else {
-      showPermissionAlert();
+      // Show an alert if contacts permission is not granted
+      const alert = await alertController.create({
+        header: 'Berechtigung erforderlich',
+        message: 'Diese App benötigt Zugriff auf Ihre Kontakte. Gewähren Sie die Berechtigung, um fortzufahren.',
+        buttons: [
+          {
+            text: 'Beenden',
+            handler: () => {
+              App.exitApp();
+            },
+          },
+          {
+            text: 'Erneut versuchen',
+            handler: () => {
+              retrieveContacts(); // Retry retrieving contacts
+            },
+          },
+        ],
+      });
+
+      await alert.present();
     }
   } catch (error) {
     console.error('Error requesting or getting contacts permission: ', error);
   }
-};
-
-// Function to show the permission alert
-const showPermissionAlert = async () => {
-  const alert = await alertController.create({
-    header: 'Berechtigung erforderlich',
-    message: 'Diese App benötigt Zugriff auf Ihre Kontakte. Erteilen Sie die Berechtigung, um fortzufahren.',
-    buttons: [
-      {
-        text: 'Beenden',
-        handler: () => {
-          App.exitApp();
-        },
-      },
-      {
-        text: 'Erneut versuchen',
-        handler: async () => {
-          if (!hasRetriedPermission.value) {
-            hasRetriedPermission.value = true;
-            await retrieveContacts(); // Retry retrieving contacts
-          } else {
-
-          }
-        },
-      },
-    ],
-  });
-  await alert.present();
 };
 
 // Function to get a display name for a contact
