@@ -74,7 +74,7 @@ const handlePermissionsAndContacts = async () => {
     message: 'Diese App benötigt Berechtigungen für den Zugriff auf deine Kontakte, um richtig zu funktionieren. Möchtest du die App-Einstellungen öffnen?',
     buttons: [
       {
-        text: 'Open Settings',
+        text: 'Einstellungen öffnen',
         handler: async () => {
           // Open app settings for user to grant permission
           await NativeSettings.open({
