@@ -73,7 +73,7 @@ const retrieveContacts = async () => {
       // Show an alert if contacts permission is not granted
       const alert = await alertController.create({
         header: 'Berechtigung erforderlich',
-        message: 'Diese App benötigt Zugriff auf Ihre Kontakte. Gewähren Sie die Berechtigung, um fortzufahren.',
+        message: 'Diese App benötigt Zugriff auf Ihre Kontakte. Erteilen Sie die Berechtigung, um fortzufahren.',
         buttons: [
           {
             text: 'Beenden',
