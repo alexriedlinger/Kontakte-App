@@ -116,7 +116,7 @@ const createContact = async () => {
     // Show an alert for missing information
     const alert = await alertController.create({
       header: 'Fehlende Informationen',
-      message: 'Bitte füllen Sie mindestens ein Feld aus, um den Kontakt zu erstellen.',
+      message: 'Bitte fülle mindestens ein Feld aus, um den Kontakt zu erstellen.',
       buttons: ['OK'],
     });
 

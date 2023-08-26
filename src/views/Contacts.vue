@@ -70,8 +70,8 @@ const handlePermissionsAndContacts = async () => {
 
   const alert = await alertController.create({
     backdropDismiss: false,
-    header: 'Permission Required',
-    message: 'This app requires contacts permission to function properly. Would you like to open app settings?',
+    header: 'Berechtigungen erforderlich',
+    message: 'Diese App benötigt Berechtigungen für den Zugriff auf deine Kontakte, um richtig zu funktionieren. Möchtest du die App-Einstellungen öffnen?',
     buttons: [
       {
         text: 'Open Settings',
