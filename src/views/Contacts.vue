@@ -32,11 +32,12 @@ import {
   IonList,
   IonPage,
   IonToolbar,
-  alertController,
+  alertController
 } from '@ionic/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { BirthdayPayload, ContactPayload, Contacts } from '@capacitor-community/contacts';
-import { apps, personAddOutline } from 'ionicons/icons';
+import { personAddOutline } from 'ionicons/icons';
+import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-settings';
 import { App } from '@capacitor/app';
 
 // Import custom event bus for communication between components
@@ -44,7 +45,6 @@ import EventBus from '@/router/EventBus';
 
 const defaultAvatarUrl = '/images/avatar.svg'
 const contacts = ref<ContactPayload[]>([]);
-const hasRetriedPermission = ref(false);
 
 // Compute a sorted list of contacts by first name
 const sortedContacts = computed(() => {
@@ -56,46 +56,71 @@ const sortedContacts = computed(() => {
 });
 
 const retrieveContacts = async () => {
-  try {
-    // Request contacts permission from the user
-    const response = await Contacts.requestPermissions();
-    if (response.contacts === 'granted') {
-      // Define the projection to retrieve specific contact data
-      const projection = {
+        // Define the projection to retrieve specific contact data
+        const projection = {
         name: true,
         phones: true,
+        };
+        // Retrieve contacts using the specified projection
+        const result = await Contacts.getContacts({ projection });
+        contacts.value = result.contacts;
+}
+
+const handlePermissionsAndContacts = async () => {
+
+  const alert = await alertController.create({
+    backdropDismiss: false,
+    header: 'Permission Required',
+    message: 'This app requires contacts permission to function properly. Would you like to open app settings?',
+    buttons: [
+      {
+        text: 'Open Settings',
+        handler: async () => {
+          // Open app settings for user to grant permission
+          await NativeSettings.open({
+            optionAndroid: AndroidSettings.ApplicationDetails,
+            optionIOS: IOSSettings.App,
+          });
+        },
+      },
+    ],
+  })
+
+  try {
+    // Check the current permission status
+    const permissionStatus = await Contacts.checkPermissions();
+    console.log(permissionStatus.contacts)
+    
+    switch (permissionStatus.contacts) {
+      case 'granted':
+        console.log("dismiss alert")
+        await alert.dismiss();
+        // Permission already granted, retrieve contacts
+        retrieveContacts();
+        break;
+      case 'prompt':
+        // Request permissions and check again if granted
+        const requestResponse = await Contacts.requestPermissions();
+        if (requestResponse.contacts === 'granted') {
+          retrieveContacts();
+        } else if (requestResponse.contacts === 'prompt-with-rationale') {
+            const recheckStatus =  await Contacts.requestPermissions();
+            if (recheckStatus.contacts === 'granted') {
+              retrieveContacts();
+              break
+            } else {
+              handlePermissionsAndContacts;
+              break
+            }
+        }
+      case 'denied':
+          await alert.present();
+          break
       };
-
-      // Retrieve contacts using the specified projection
-      const result = await Contacts.getContacts({ projection });
-      contacts.value = result.contacts;
-    } else {
-      // Show an alert if contacts permission is not granted
-      const alert = await alertController.create({
-        header: 'Berechtigung erforderlich',
-        message: 'Diese App benötigt Zugriff auf Ihre Kontakte. Erteilen Sie die Berechtigung, um fortzufahren.',
-        buttons: [
-          {
-            text: 'Beenden',
-            handler: () => {
-              App.exitApp();
-            },
-          },
-          {
-            text: 'Erneut versuchen',
-            handler: () => {
-              retrieveContacts(); // Retry retrieving contacts
-            },
-          },
-        ],
-      });
-
-      await alert.present();
-    }
-  } catch (error) {
-    console.error('Error requesting or getting contacts permission: ', error);
+    } catch (error) {
+    console.error('Error handling permissions and contacts:', error);
   }
-};
+}
 
 // Function to get a display name for a contact
 const getDisplayName = (contact: ContactPayload): string => {
@@ -134,19 +159,22 @@ const formatBirthday = (birthday: BirthdayPayload): string => {
 
 // Event handler for contact-related events
 const handleContactEvent = () => {
-  retrieveContacts(); // Update contacts when a new contact is created or deleted
+  console.log("state changed")
+  handlePermissionsAndContacts(); // Update contacts when a new contact is created or deleted
 };
+
 
 // Mounting logic
 onMounted(() => {
-  retrieveContacts(); // Retrieve contacts on page load
-  // Attach event listeners for contact events
+  handlePermissionsAndContacts();
+  App.addListener('appStateChange', handleContactEvent);
   EventBus.on('createdContact', handleContactEvent);
   EventBus.on('deletedContact', handleContactEvent);
 });
 
 // Unmounting logic
 onUnmounted(() => {
+  App.removeAllListeners();
   // Detach event listeners when the component is unmounted
   EventBus.off('createdContact', handleContactEvent);
   EventBus.off('deletedContact', handleContactEvent);

@@ -27,6 +27,7 @@
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
     "capacitor-email-composer": "^2.0.1",
+    "capacitor-native-settings": "^5.0.0",
     "ionicons": "^7.0.0",
     "mitt": "^3.0.1",
     "vue": "^3.2.45",
