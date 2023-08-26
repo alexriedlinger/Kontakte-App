@@ -17,5 +17,13 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom'
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        // Add other entry points if needed
+      }
+    }
   }
 })

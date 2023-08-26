@@ -113,8 +113,8 @@ const contactId = ref('');
 const phoneNumber = ref('');
 const email = ref('');
 const birthday = ref('');
-const fullName = ref('Alexander Riedlinger');
-const defaultAvatarUrl = 'resources/avatar.svg';
+const fullName = ref('');
+const defaultAvatarUrl = '/images/avatar.svg'
 
 // Function to format birthday information
 const formatBirthday = (birthday: BirthdayPayload): string => {
