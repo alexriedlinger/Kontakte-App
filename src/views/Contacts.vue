@@ -46,6 +46,24 @@ import EventBus from '@/router/EventBus';
 const defaultAvatarUrl = '/images/avatar.svg'
 const contacts = ref<ContactPayload[]>([]);
 
+const permissionAlert = alertController.create({
+    backdropDismiss: false,
+    header: 'Berechtigungen erforderlich',
+    message: 'Diese App benötigt Berechtigungen für den Zugriff auf deine Kontakte, um richtig zu funktionieren. Möchtest du die App-Einstellungen öffnen?',
+    buttons: [
+      {
+        text: 'Einstellungen öffnen',
+        handler: async () => {
+          // Open app settings for user to grant permission
+          await NativeSettings.open({
+            optionAndroid: AndroidSettings.ApplicationDetails,
+            optionIOS: IOSSettings.App,
+          });
+        },
+      },
+    ],
+  })
+
 // Compute a sorted list of contacts by first name
 const sortedContacts = computed(() => {
   return contacts.value.slice().sort((a, b) => {
@@ -66,39 +84,28 @@ const retrieveContacts = async () => {
         contacts.value = result.contacts;
 }
 
-const handlePermissionsAndContacts = async () => {
 
-  const alert = await alertController.create({
-    backdropDismiss: false,
-    header: 'Berechtigungen erforderlich',
-    message: 'Diese App benötigt Berechtigungen für den Zugriff auf deine Kontakte, um richtig zu funktionieren. Möchtest du die App-Einstellungen öffnen?',
-    buttons: [
-      {
-        text: 'Einstellungen öffnen',
-        handler: async () => {
-          // Open app settings for user to grant permission
-          await NativeSettings.open({
-            optionAndroid: AndroidSettings.ApplicationDetails,
-            optionIOS: IOSSettings.App,
-          });
-        },
-      },
-    ],
-  })
+const handlePermissionsAndContacts = async () => {
 
   try {
     // Check the current permission status
     const permissionStatus = await Contacts.checkPermissions();
-    
+    console.log("first check")
     switch (permissionStatus.contacts) {
       case 'granted':
-        await alert.dismiss();
+        (await permissionAlert).dismiss()
+        .then(result => {
+          console.log("Alert dismissed:", result); // Result will be a boolean value
+        });
+        console.log("granted")
         retrieveContacts();
         break;
       case 'prompt':
+        console.log("prompt")
         const requestResponse = await Contacts.requestPermissions();
         if (requestResponse.contacts === 'granted') {
           retrieveContacts();
+          break
         } else if (requestResponse.contacts === 'prompt-with-rationale') {
             const retryRequestResponse =  await Contacts.requestPermissions();
             if (retryRequestResponse.contacts === 'granted') {
@@ -109,7 +116,8 @@ const handlePermissionsAndContacts = async () => {
             }
         }
       case 'denied':
-          await alert.present();
+          console.log("denied");
+          (await permissionAlert).present();
           break
       };
     } catch (error) {
