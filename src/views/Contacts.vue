@@ -74,7 +74,7 @@ const handlePermissionsAndContacts = async () => {
     message: 'Diese App benötigt Berechtigungen für den Zugriff auf deine Kontakte, um richtig zu funktionieren. Möchtest du die App-Einstellungen öffnen?',
     buttons: [
       {
-        text: 'Open Settings',
+        text: 'Einstellungen öffnen',
         handler: async () => {
           // Open app settings for user to grant permission
           await NativeSettings.open({
@@ -93,23 +93,20 @@ const handlePermissionsAndContacts = async () => {
     
     switch (permissionStatus.contacts) {
       case 'granted':
-        console.log("dismiss alert")
         await alert.dismiss();
-        // Permission already granted, retrieve contacts
         retrieveContacts();
         break;
       case 'prompt':
-        // Request permissions and check again if granted
         const requestResponse = await Contacts.requestPermissions();
         if (requestResponse.contacts === 'granted') {
           retrieveContacts();
         } else if (requestResponse.contacts === 'prompt-with-rationale') {
-            const recheckStatus =  await Contacts.requestPermissions();
-            if (recheckStatus.contacts === 'granted') {
+            const retryRequestResponse =  await Contacts.requestPermissions();
+            if (retryRequestResponse.contacts === 'granted') {
               retrieveContacts();
               break
             } else {
-              handlePermissionsAndContacts;
+              await alert.present();
               break
             }
         }
@@ -183,5 +180,4 @@ onUnmounted(() => {
 
 
 <style>
-/* Your styles here */
 </style>
