@@ -106,7 +106,7 @@ const handlePermissionsAndContacts = async () => {
               retrieveContacts();
               break
             } else {
-              await alert.present();
+              handlePermissionsAndContacts();
               break
             }
         }
