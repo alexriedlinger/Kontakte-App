@@ -89,7 +89,6 @@ const handlePermissionsAndContacts = async () => {
   try {
     // Check the current permission status
     const permissionStatus = await Contacts.checkPermissions();
-    console.log(permissionStatus.contacts)
     
     switch (permissionStatus.contacts) {
       case 'granted':
@@ -155,7 +154,6 @@ const formatBirthday = (birthday: BirthdayPayload): string => {
 
 // Event handler for contact-related events
 const handleContactEvent = () => {
-  console.log("state changed")
   handlePermissionsAndContacts(); // Update contacts when a new contact is created or deleted
 };
 
