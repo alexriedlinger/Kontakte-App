@@ -106,7 +106,6 @@ const handlePermissionsAndContacts = async () => {
               retrieveContacts();
               break
             } else {
-              handlePermissionsAndContacts();
               break
             }
         }
