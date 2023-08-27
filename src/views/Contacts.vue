@@ -90,18 +90,15 @@ const handlePermissionsAndContacts = async () => {
   try {
     // Check the current permission status
     const permissionStatus = await Contacts.checkPermissions();
-    console.log("first check")
     switch (permissionStatus.contacts) {
       case 'granted':
         (await permissionAlert).dismiss()
         .then(result => {
           console.log("Alert dismissed:", result); // Result will be a boolean value
         });
-        console.log("granted")
         retrieveContacts();
         break;
       case 'prompt':
-        console.log("prompt")
         const requestResponse = await Contacts.requestPermissions();
         if (requestResponse.contacts === 'granted') {
           retrieveContacts();
@@ -116,7 +113,6 @@ const handlePermissionsAndContacts = async () => {
             }
         }
       case 'denied':
-          console.log("denied");
           (await permissionAlert).present();
           break
       };
