@@ -3,8 +3,8 @@
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button slot="icon-only" router-link="/contacts" default-href="/contacts" fill="clear" shape="round">
-            <ion-icon :icon="arrowBack"></ion-icon>
+          <ion-button slot="icon-only" router-link="/contacts" default-href="/contacts" fill="clear" shape="round" >
+            <ion-icon :icon="arrowBack" size="large"></ion-icon>
           </ion-button>
         </ion-buttons>
         <ion-buttons slot="end">
@@ -185,6 +185,8 @@ const deleteContact = async () => {
   }
 };
 
+
+// Function to call using href
 const call = (phoneNumber: string) => {
   window.location.href = `tel:${phoneNumber}`;
 };
