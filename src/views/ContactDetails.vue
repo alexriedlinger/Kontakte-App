@@ -9,7 +9,7 @@
         </ion-buttons>
         <ion-buttons slot="end">
           <ion-button slot="icon-only" fill="clear" name="delete" shape="round" @click="confirmContactDeletion">
-            <ion-icon :icon="trashSharp"></ion-icon>
+            <ion-icon :icon="trashSharp" size="large"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
