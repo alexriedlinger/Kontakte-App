@@ -33,5 +33,5 @@ Die Bearbeitung von Kontakten ist nicht erforderlich.
 
 ## Abgabe
 
-- [Präsentation](https://github.com/riedlial/Kontakte-App/blob/main/KontakteApp.pptx)
-- [APK Download](https://github.com/riedlial/Kontakte-App/blob/main/Kontakte-App.apk)
+- [APK](https://github.com/riedlial/Kontakte-App/releases/download/v1/Kontakte-App.apk)
+- [Präsentation](https://github.com/riedlial/Kontakte-App/releases/download/v1/KontakteApp.pptx)
