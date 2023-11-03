@@ -31,7 +31,6 @@ Ein schlichtes Design ist ausreichend.
 Die Bearbeitung von Kontakten ist nicht erforderlich.
 
 
-## Abgabe
+## APK
 
 - [APK](https://github.com/riedlial/Kontakte-App/releases/download/v1/Kontakte-App.apk)
-- [Präsentation](https://github.com/riedlial/Kontakte-App/releases/download/v1/KontakteApp.pptx)
